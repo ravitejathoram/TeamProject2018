@@ -81,25 +81,20 @@ with io.open('data/tweet2.json', encoding='utf-8') as f:
         text = text.replace("\xe2\x80\x94",' ').replace("\x9d\xa4",' ').replace("\x96\x91",' ').replace("\xe1\x91\xac\xc9\x8c\xce\x90\xc8\xbb\xef\xbb\x89\xd4\xbc\xef\xbb\x89\xc5\xa0\xc5\xa0\xc2\xb8",' ')
         text = text.replace("\xe2\x80\x99s", " ").replace("\xe2\x80\x98", ' ').replace("\xe2\x80\x99", ' ').replace("\xe2\x80\x9c", " ").replace("\xe2\x80\x9d", " ")
         text = text.replace("\xe2\x82\xac", " ").replace("\xc2\xa3", " ").replace("\xc2\xa0", " ").replace("\xc2\xab", " ").replace("\xf0\x9f\x94\xb4", " ").replace("\xf0\x9f\x87\xba\xf0\x9f\x87\xb8\xf0\x9f", "")
+
         tokens = prepare_text_for_lda(text)
-        # print(text)
-        # print(tokens)
         text_data.append(tokens)
         count += 1
         print(count)
-        # tokens = prepare_text_for_lda(line)
-        # if random.random() > .99:
-        #     print(tokens)
-        #     text_data.append(tokens)
 
 dictionary = corpora.Dictionary(text_data)
 corpus = [dictionary.doc2bow(text) for text in text_data]
 pickle.dump(corpus, open('output/model_hurricane/corpus.pkl', 'wb'))
 dictionary.save('output/model_hurricane/dictionary.gensim')
-NUM_TOPICS = 10
+NUM_TOPICS = 25
 ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics = NUM_TOPICS, id2word=dictionary, passes=20)
 ldamodel.save('output/model_hurricane/model.gensim')
-topics = ldamodel.print_topics(num_words=10)
+topics = ldamodel.print_topics(num_words=25)
 for topic in topics:
     print(topic)
 print("done and total tweets processed:" ,count)
