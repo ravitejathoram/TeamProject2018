@@ -12,10 +12,7 @@ import ssl
 import gensim
 import time
 import nltk
-from nltk.tokenize import word_tokenize
-from nltk.tag import pos_tag
-
-from spacy.tests.pipeline.test_pipe_methods import nlp
+from nltk import word_tokenize, pos_tag, ne_chunk
 
 time_start = time.time()
 try:
@@ -28,7 +25,13 @@ else:
 parser = English()
 nltk.download('wordnet')
 nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('maxent_ne_chunker')
+nltk.download('words')
+
 en_stop = set(nltk.corpus.stopwords.words('english'))
+
 print("Stop:", en_stop, len(en_stop))
 
 def preprocess(sent):
@@ -103,5 +106,4 @@ with io.open('data/tweet2.json', encoding='utf-8') as f:
                                                                                                            " ").replace(
             "\xf0\x9f\x94\xb4", " ").replace("\xf0\x9f\x87\xba\xf0\x9f\x87\xb8\xf0\x9f", "")
         print(text)
-        sent = preprocess(text)
-      
+        print(ne_chunk(pos_tag(word_tokenize(text)), binary=True))
