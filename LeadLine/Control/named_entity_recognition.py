@@ -12,7 +12,15 @@ import ssl
 import gensim
 import time
 import nltk
+import spacy
+from spacy import displacy
+from collections import Counter
+
+from nltk.tokenize import word_tokenize
+from nltk.tag import pos_tag
 from nltk import word_tokenize, pos_tag, ne_chunk
+from nltk.chunk import conlltags2tree, tree2conlltags
+from pprint import pprint
 
 time_start = time.time()
 try:
@@ -30,53 +38,15 @@ nltk.download('averaged_perceptron_tagger')
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
 
-en_stop = set(nltk.corpus.stopwords.words('english'))
-
-print("Stop:", en_stop, len(en_stop))
-
-def preprocess(sent):
-    sent = nltk.word_tokenize(sent)
-    sent = nltk.pos_tag(sent)
-    return sent
-
-def get_lemma(word):
-    lemma = wn.morphy(word)
-    # print("lemma", lemma)
-    if lemma is None:
-        return word
-    else:
-        return lemma
 
 
-def get_lemma2(word):
-    # print("lemma2:", WordNetLemmatizer().lemmatize(word))
-    return WordNetLemmatizer().lemmatize(word)
+def ner_help(text):
+    text = nltk.word_tokenize(text)
+    text = nltk.pos_tag(text)
+    return text
 
 
-def tokenize(text):
-    lda_tokens = []
-    tokens = parser(text)
-    # print("parsing:", tokens)
-    for token in tokens:
-        if token.orth_.isspace():
-            continue
-        elif token.like_url:
-            lda_tokens.append('URL')
-        elif token.orth_.startswith('@'):
-            lda_tokens.append('SCREEN_NAME')
-        else:
-            lda_tokens.append(token.lower_)
-    return lda_tokens
-
-
-def prepare_text_for_lda(text):
-    tokens = tokenize(text)
-    tokens = [token for token in tokens if len(token) > 4]
-    tokens = [token for token in tokens if token not in en_stop]
-    tokens = [get_lemma(token) for token in tokens]
-    return tokens
-
-
+global_entity = {}
 text_data = []
 count = 0
 with io.open('data/tweet2.json', encoding='utf-8') as f:
@@ -88,9 +58,12 @@ with io.open('data/tweet2.json', encoding='utf-8') as f:
         text = re.sub('[:;>?<=*+()/,\-#!$%\{˜|\}\[^_\\@\]1234567890’‘]', ' ', text)
         text = re.sub('[\d]', '', text)
         text = re.sub('[^\x01-\x7F]', '', text)
+        text = re.sub('^RT', '', text)
+        text = re.sub( '\s+', ' ', text).strip()
         text = text.replace(".", '')
         text = text.replace("'", ' ')
         text = text.replace("\"", ' ')
+        text = text.replace("\n", ' ')
         text = text.replace("\x9d", ' ').replace("\x8c", ' ')
         text = text.replace("\xa0", ' ')
         text = text.replace("\x9d\x92", ' ').replace("\x9a\xaa\xf0\x9f\x94\xb5", ' ').replace(
@@ -106,4 +79,19 @@ with io.open('data/tweet2.json', encoding='utf-8') as f:
                                                                                                            " ").replace(
             "\xf0\x9f\x94\xb4", " ").replace("\xf0\x9f\x87\xba\xf0\x9f\x87\xb8\xf0\x9f", "")
         print(text)
-        print(ne_chunk(pos_tag(word_tokenize(text)), binary=True))
+        # ne_tree = ne_chunk(pos_tag(word_tokenize(text)), binary=True)
+        # iob_tag = tree2conlltags(ne_tree)
+        # print(iob_tag)
+        # res = ner_help(text)
+        # pattern = 'NP: {<DT>?<JJ>*<NN>}'
+        # cp = nltk.RegexpParser(pattern)
+        # cs = cp.parse(res)
+        # iob_tagged = tree2conlltags(cs)
+        # # pprint(iob_tagged)
+        ne_tree = ne_chunk(pos_tag(word_tokenize(text)))
+        nlp = spacy.load('en_core_web_sm-2.0.0/en_core_web_sm/en_core_web_sm-2.0.0')
+        doc = nlp(text)
+        labels = [x.label_ for x in doc.ents]
+        Counter(labels)
+
+
