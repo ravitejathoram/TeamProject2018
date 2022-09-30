@@ -22,7 +22,7 @@ ipython-genutils==0.2.0
 jedi==0.13.1
 Jinja2==2.10
 jmespath==0.9.3
-joblib==0.12.5
+joblib==1.2.0
 MarkupSafe==1.0
 more-itertools==4.3.0
 msgpack==0.5.6
